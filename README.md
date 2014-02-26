@@ -13,7 +13,7 @@ none
 Everything handles jQuery and HTML5 stuff (canvas, audio).
 
 
-# BASIC USAGE
+### BASIC USAGE
 Given a "<div id='jap'></div>" it can be build with:
 ```
 $("#jap").jap();
@@ -21,7 +21,7 @@ $("#jap").jap();
 The '#jap' div became the container for all the html stuff needed by the player.
 
 
-# ADVANCED USAGE
+### ADVANCED USAGE
 It can be used as a wrapper for a custom player web page.
 See this example:
 ```
@@ -35,7 +35,7 @@ $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=3"});
 $("#jap").jap("play");
 ```
 
-# PARAMETERS
+### PARAMETERS
 All the default parameters are exposed here:
 ```
 $.fn.jap.defaults
@@ -50,14 +50,14 @@ These can be customized in the jap constructor:
 ```
 $("#jap").jap({buttonSize: 50});
 $("#jap").jap({
-				formatTitle: function(src ,metadata) {	
-					if ($.isEmptyObject(metadata)) return src;
-					return metadata.author + " - " + metadata.album + " - " + metadata.trackn + " - " + metadata.title;
-				}
-			});
+  formatTitle: function(src ,metadata) {	
+	if ($.isEmptyObject(metadata)) return src;
+	return metadata.author + " - " + metadata.album + " - " + metadata.trackn + " - " + metadata.title;
+  }
+});
 ```
 
-# EVENTS (API)
+### EVENTS (API)
 - enqueue:
 ```
 $("#controls").jap("enqueue", 	{ src: "/home/my/music/is/here/track1.mp3", metadata: {title: "The wonderful song", album: "A new Album"} });
