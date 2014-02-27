@@ -35,7 +35,7 @@
 		
 		// build interface
 		controls = {
-			drag:	 	$("<div style='height: 10; clear: both; margin-bottom:4' class='ui-widget-header ui-corner-all'></div>")
+			drag:	 	$('<div class="drag ui-widget-header ui-corner-all" style="height: 10; clear: both; margin-bottom:4"></div>')
 			, prev: 	$('<div class="prev"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-prev" }} ).css({"width": button_1, "height": button_1, "float": "left"})
 			, play: 	$('<div class="play"></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )	.css({"width": button_1, "height": button_1, "float": "left"})
 			, pause: 	$('<div class="pause"></div>')	.button({text: false, icons: { primary: "ui-icon-pause" }} )	.css({"width": button_1, "height": button_1, "float": "left"})
@@ -46,9 +46,9 @@
 			, playlist: 	$('<div class="playlist"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} ).css({"width": button_1, "height": button_1, "font-size":"0.9em", "float":"left"})
 			, screen:	$('<canvas class="screen"></canvas>').css({"border-radius": "2px", "border": 1, "clear": "both", "height": button_3})
 			, seekbar:	$('<div class="seekbar"></div>').progressbar()	.css({"clear": "both", "height": button_3})
-			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": settings.volume}).css({"font-size":"0.8em", "height": button_1+(2*button_3)})
+			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": settings.volume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
 			, audio:	$("<audio></audio>")			
-			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").selectable().hide().css({"position":"absolute", "list-style-type":"none", "margin": 0, "padding": 7, "font-size": fontSize, "overflow-y":"scroll", "max-height":"200px"})
+			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7, "font-size": fontSize}).selectable()
 		};
 		
 		// attach plugin events to the controls
@@ -57,9 +57,7 @@
 							var x = utils.getTrackPercentage(p);
 							controls.seekbar.progressbar("option", "value", x);
 						})
-						.on("ended", function() {
-							container.jap("next");
-						});
+						.on("ended", function() { container.jap("next"); });
 		controls.audio[0].volume = settings.volume / 100;
 		controls.queue	.on("selectableselecting", function(event, ui) 	{ $(ui.selecting).removeClass(css.active).addClass(css.selected); })
 				.on("selectableunselecting", function(event, ui){ $(ui.unselecting).removeClass(css.selected + " " + css.active);	})
@@ -82,8 +80,9 @@
 		  else $this.addClass(css.active);
 		});
 		controls.playlist.on("click",	function() {
-			if (controls.queue.is(":visible")) controls.queue.fadeOut();
-			else controls.queue.fadeIn().position({ my: "left top", at: "right+5 top", of: container});
+			var qwrap = controls.queue.parent();
+			if (qwrap.is(":visible")) qwrap.fadeOut();
+			else qwrap.fadeIn();
 		});
 		controls.seekbar.on("click", 	function(evt) {
 			var myoffs = controls.seekbar.offset();
@@ -109,13 +108,11 @@
 		settings.layout.find(".volume-container").css(tdcss)	.append(controls.volume);
 		settings.layout.find(".screen-container").css(tdcss)	.append(controls.screen);
 		settings.layout.find(".seekbar-container").css(tdcss)	.append(controls.seekbar);
-		container.append(settings.layout, controls.audio)
-			.after(controls.queue)
+		container.append(settings.layout, controls.audio, controls.queue)
 			.draggable({handle: controls.drag})
-			.css({"font-size": 9, "padding": 8})
+			.css({"font-size": fontSize, "padding": 8})
 			.addClass("ui-widget ui-widget-content ui-corner-all");
-		
-		
+			
 		// canvas
 		var w = controls.seekbar.width();
 		controls.screen.css("width", w)
@@ -129,7 +126,23 @@
 		ctx.fillRect(0,0,c.width,c.height);
 		
 		// final size fixes
-		container.css({"width": settings.layout.outerWidth(true), "height": settings.layout.outerHeight(true)});
+		var fullw = settings.layout.outerWidth(true);
+		var fullh = settings.layout.outerHeight(true);
+		container.css({"width": fullw, "height": fullh});
+		
+		//controls.queue;
+		var queuewrap = controls.queue.wrap($("<div id='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
+		queuewrap
+			  .position({ my: "left top", at: "right+5 top", of: container})
+			  .resizable()
+			  .width(fullw).height(fullh)
+			  .on("resize", function(event, ui) {
+				var w = ui.element.width() - (controls.queue.outerWidth(true) - controls.queue.width());
+				var h = ui.element.height() - (controls.queue.outerHeight(true) - controls.queue.height());
+				controls.queue.width(w).height(h);
+			  })
+			  .hide();
+
 		// selectable's little hack
 		/*var colorSelected = $("<div class='ui-state-highlight'></div>").css("background-color");//ui-state-selected ui-state-focus ui-state-highlight ui-state-active
 		var colorSelecting = $("<div class='ui-state-focus'></div>").css("background-color");
@@ -306,8 +319,7 @@
 				if (typeof(param.metadata) == "undefined")
 					param.metadata = null;
 				var txt = settings.formatTitle(param.src, param.metadata);
-				//var src = $('<li><a href="#"><span class="ui-icon ' + css.icontodo + '"></span>'+txt+'</a></li>"').attr("src", param.src).data(param.metadata);
-				var li = $('<li style="font-weight: normal; border: 0px" >' + txt + '</li>"')
+				var li = $('<li style="font-weight:normal; border:0px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" >' + txt + '</li>"')
 				      .attr("src", param.src)
 				      .data(param.metadata)
 				      .on("keydown", function(evt) {dbg(event.which)});
@@ -325,6 +337,7 @@
 				
 				//if (doTheFix) 
 				controls.queue.selectable();
+				controls.queue.parent().trigger("resize", {element: controls.queue.parent()});
 			}
 			if (action === "dequeue") { // remove the nth elem from the queue. Param: { index: 2 }
 				controls.queue.eq(param.index).remove();
