@@ -16,11 +16,15 @@ Everything handles jQuery and HTML5 stuff (canvas, audio).
 
 
 ### BASIC USAGE
-Given a "<div id='jap'></div>" it can be build with:
+It can be build this way:
 ```
+<div id='jap'></div>
+
+(..)
+
 $("#jap").jap();
 ```
-The '#jap' div became the container for all the html stuff needed by the player.
+The '#jap' div will become the container for all the html stuff needed by the player.
 
 
 ### ADVANCED USAGE
@@ -29,7 +33,7 @@ See this example:
 ```
 $("#jap").jap().hide();
 ```
-Then somewhere in your code:
+Then somewhere in your code you can send commands to the jap:
 ```
 $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=1"});
 $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=2"});
@@ -47,12 +51,12 @@ They are:
 - volume (default: 20): the initial value of the volume. It is a percentage [0:100] value
 - formatTitle (default: function(src, metadata) { return src; }): it is the formatting function for the song title. It is
 used by the playlist and the "now playing" scrolling view
-- layout
+- layout (default: a html table): it is the container for each control of the jap
 
 These can be customized in the jap constructor:
 ```
-$("#jap").jap({buttonSize: 50});
 $("#jap").jap({
+  buttonSize: 50,
   formatTitle: function(src ,metadata) {	
 	if ($.isEmptyObject(metadata)) return src;
 	return metadata.author + " - " + metadata.album + " - " + metadata.trackn + " - " + metadata.title;
