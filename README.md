@@ -81,8 +81,8 @@ $("#jap").jap()
 ```
 $("#controls").jap("enqueue", 	{ src: "/home/my/music/is/here/track1.mp3", metadata: {title: "The wonderful song", album: "A new Album"} });
 ```
-  - src (required): the uri of the song.
-  - metadata (optional): it is a custom JSON object. It is passed to the "formatTitle" function so you can customize the way jap displays the song title.
+* src (required): the uri of the song.
+* metadata (optional): it is a custom JSON object. It is passed to the "formatTitle" function so you can customize the way jap displays the song title.
 - dequeue
 ```
 $("#controls").jap("dequeue", 	{ index: 3 });
