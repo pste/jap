@@ -4,15 +4,17 @@ Jap (as in "Japan") is a jQueryUI styled HTML5 audio player. It is freely usable
 still in development (don't consider this a stable/final version, not yet).
 
 ### TODO
-- Playlist buttons (shuffle, sort -with custom fn-, add -browse local/prompt uri-, remove)
-
+- Playlist buttons (add -browse local/prompt uri-)
+- Playlist feedback of current playing item
+- Sort playlist / shuffle playlist now stops playing
+- click on time switch time mode (00:23 / -04:32)
 
 ### KNOWN BUGS
-none
+Still under heavy testing
 
 
 ### WORKS ON
-Everything handles jQuery and HTML5 stuff (canvas, audio).
+Everything handles jQuery and HTML5 stuff (canvas and audio). Succesfully tested on Firefox, Chrome, Rekonq, Ie9.
 
 
 ### BASIC USAGE
@@ -79,18 +81,18 @@ $("#jap").jap()
 
 - enqueue:
 ```
-$("#controls").jap("enqueue", 	{ src: "/home/my/music/is/here/track1.mp3", metadata: {title: "The wonderful song", album: "A new Album"} });
+$("#controls").jap("enqueue", { src: "/home/my/music/is/here/track1.mp3", metadata: {title: "The wonderful song", album: "A new Album"} });
 ```
     * src (required): the uri of the song.
     * metadata (optional): it is a custom JSON object. It is passed to the "formatTitle" function so you can customize the way jap displays the song title.
 - dequeue
 ```
-$("#controls").jap("dequeue", 	{ index: 3 });
+$("#controls").jap("dequeue", { index: 3 });
 ```
     * index (required): the playlist index of the item to remove.
 - seek
 ```
-$("#controls").jap("seek", 		{ percentage: 20 });
+$("#controls").jap("seek", { percentage: 20 });
 ```
     * percentage (required): a [0:100] value.
 - play
