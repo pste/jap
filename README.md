@@ -5,9 +5,7 @@ still in development (don't consider this a stable/final version, not yet).
 
 ### TODO
 - Playlist buttons (add -browse local/prompt uri-)
-- Playlist feedback of current playing item
 - Sort playlist / shuffle playlist now stops playing
-- click on time switch time mode (00:23 / -04:32)
 
 ### KNOWN BUGS
 Still under heavy testing
