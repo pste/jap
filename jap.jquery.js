@@ -61,7 +61,7 @@
 			, seekbar:	$('<div class="seekbar"></div>').progressbar()	.css({"clear": "both", "height": button_3})
 			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": settings.volume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
 			, audio:	$("<audio></audio>")			
-			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7, "font-size": fontSize})
+			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7})
 		};
 		var queuecontrols  = {
 			play: 	$('<div></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
@@ -252,11 +252,11 @@
 		ctx.fillStyle = fontColor;		
 		// title
 		ctx.clearRect(0,0,canvaswidth,canvasheight);
-		ctx.font = fontSize + "px normal " + settings.font;
+		ctx.font = fontSize + "px " + settings.font;
 		ctx.fillText(text, offset, canvasheight);
 		// draw time
 		ctx.clearRect(0,0,timewidth,canvasheight);
-		ctx.font = fontSize + "px bold " + settings.font;
+		ctx.font = fontSize + "px " + settings.font;
 		ctx.fillText(time, 0, canvasheight);
 		// loop
 		if (animationOn === true) {
@@ -409,7 +409,8 @@
 				if (typeof(param.metadata) == "undefined")
 					param.metadata = null;
 				var txt = settings.formatTitle(param.src, param.metadata);
-				var li = $('<li style="font-weight:normal; border:0px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" >' + txt + '</li>"')
+				var li = $('<li>' + txt + '</li>"')
+				    .css({"font-size":fontSize, "font-family":settings.font, "font-weight":"normal", "border":0, "overflow":"hidden", "text-overflow":"ellipsis", "white-space":"nowrap"})
 				    .attr("src", param.src)
 				    .data("jap", param.metadata)
 				    ;
