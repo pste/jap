@@ -55,8 +55,8 @@
 			, next: 	$('<div class="next"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-next" }} ).css(css_btn)
 			, loop:		$('<div class="loop"></div>')	.button({text: false, icons: { primary: "ui-icon-refresh" }} )	.css(css_btn_mini).css({"float":"left", "clear":"both"})
 			, shuffle:	$('<div class="shuffle"></div>').button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini).css({"float":"left", "clear":"both"})
-			, playlist: $('<div class="playlist"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} )	.css(css_btn).css({"font-size":"0.9em"})
-			, screen:	$('<canvas class="screen"></canvas>').css({"border-radius": "2px", "border": 1, "clear": "both", "height": button_3})
+			, playlist: 	$('<div class="playlist"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} )	.css(css_btn).css({"font-size":"0.9em"})
+			, display:	$('<canvas class="display"></canvas>').css({"border-radius": "2px", "border": 1, "clear": "both", "height": button_3})
 			, seekbar:	$('<div class="seekbar"></div>').progressbar()	.css({"clear": "both", "height": button_3})
 			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": settings.volume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
 			, audio:	$("<audio></audio>")			
@@ -162,7 +162,7 @@
 		settings.layout.find(".playlist-container").css(tdcss)	.append(controls.playlist);
 		settings.layout.find(".shuffleloop-container").css(tdcss).append(controls.shuffle, controls.loop);
 		settings.layout.find(".volume-container").css(tdcss)	.append(controls.volume);
-		settings.layout.find(".screen-container").css(tdcss)	.append(controls.screen);
+		settings.layout.find(".display-container").css(tdcss)	.append(controls.display);
 		settings.layout.find(".seekbar-container").css(tdcss)	.append(controls.seekbar);
 		container.append(settings.layout, controls.audio, controls.queue)
 			.draggable({handle: controls.drag})
@@ -171,10 +171,10 @@
 			
 		// canvas
 		var w = controls.seekbar.width();
-		controls.screen.css("width", w)
-		controls.screen.attr("width", w);
-		controls.screen.attr("height", button_3);
-		var c = controls.screen[0];
+		controls.display.css("width", w)
+		controls.display.attr("width", w);
+		controls.display.attr("height", button_3);
+		var c = controls.display[0];
 		var ctx = c.getContext('2d');
 		fontColor = $(".ui-widget-content").css("color");
 		ctx.fillStyle = "rgba(0,0,0,0)";
@@ -211,7 +211,7 @@
 	/* ::::::::::::::::::: */
 	
 	function tick() {
-		var c = controls.screen;
+		var c = controls.display;
 		var ctx = c[0].getContext('2d');
 		var p = controls.audio[0];
 		var x = 0;
@@ -527,7 +527,7 @@ $.fn.jap.defaults = {
 			<td class="volume-container" rowspan="3" ></td> \
 		</tr> \
 		<tr> \
-			<td class="screen-container" colspan="7" ></td> \
+			<td class="display-container" colspan="7" ></td> \
 		</tr> \
 		<tr> \
 			<td class="seekbar-container" colspan="7" ></td> \
