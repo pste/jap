@@ -1,6 +1,6 @@
 /**
 * @preserve Stefano Pirra (2014)
-* v1.0 - 20140228
+* v1.0 - 20140301
 */
 // http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#event-media-ended
 // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
