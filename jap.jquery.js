@@ -17,11 +17,12 @@
 	
 	/* ::::::::::::::::::: */
 	
-	var settings = null;
+	var settings = null; // join defaults with custom
 	var controls = null; // save controls for convenience
 	var animationOn = false;
 	var fontColor = "#00FFDE";
 	var fontSize = 10;
+	var timeleft = false;
 	
 	var css = {
 		active: "ui-state-error"
@@ -63,11 +64,11 @@
 			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7, "font-size": fontSize})
 		};
 		var queuecontrols  = {
-			play: 	$('<div></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )	.css(css_btn_mini).css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, add: $('<div></div>')		.button({text: false, icons: { primary: "ui-icon-plus" }} )	.css(css_btn_mini).css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, remove: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-minus" }} )	.css(css_btn_mini).css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, sort: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-arrowthick-1-s" }} ).css(css_btn_mini).css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, shuffle: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini).css({"float":"left", "margin":"0px 5px 0px 5px"})
+			play: 	$('<div></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
+			, add: $('<div></div>')		.button({text: false, icons: { primary: "ui-icon-plus" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
+			, remove: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-minus" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
+			, sort: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-arrowthick-1-s" }} ).css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
+			, shuffle: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
 		};
 		
 		// attach plugin events to the controls
@@ -102,6 +103,9 @@
 			var qwrap = controls.queue.parent();
 			if (qwrap.is(":visible")) qwrap.fadeOut();
 			else qwrap.fadeIn();
+		});
+		controls.display.on("click",	function() {
+			timeleft = !timeleft;
 		});
 		controls.seekbar.on("click", 	function(evt) {
 			var myoffs = controls.seekbar.offset();
@@ -186,10 +190,11 @@
 		container.css({"width": fullw, "height": fullh});
 		
 		//
-		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all" style="clear:both; padding: 2px; overflow: hidden"></div>').css({"height": settings.buttonSize/2});
+		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all"></div>').css({"height": settings.buttonSize/2, "clear":"both", "overflow":"hidden", "padding":0, "margin":0});
 		for (btn in queuecontrols) {
 			queuetoolbar.append(queuecontrols[btn]);
 		}
+		queuetoolbar.buttonset();
 		
 		// make a resizable / selectable queue;
 		var queuewrap = controls.queue.wrap($("<div id='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
@@ -214,14 +219,17 @@
 		var c = controls.display;
 		var ctx = c[0].getContext('2d');
 		var p = controls.audio[0];
-		var x = 0;
-		if (p.seekable.length > 0)
-			x = p.currentTime;
 		
 		// get text
 		var selected = controls.queue.children("li." + css.playing); // little hacky
 		var text = settings.formatTitle(selected.text(), selected.data("jap"));
-		var time = utils.timetext(x);
+		var time = 0;
+		if (p.seekable.length > 0) {
+			if (timeleft)
+			  time = "-" + utils.timetext(p.duration-p.currentTime);
+			else
+			  time = utils.timetext(p.currentTime);
+		}
 		
 		// some measure
 		var timewidth = ctx.measureText(time).width + 3;
@@ -244,11 +252,11 @@
 		ctx.fillStyle = fontColor;		
 		// title
 		ctx.clearRect(0,0,canvaswidth,canvasheight);
-		ctx.font = "normal " + fontSize + "px 'Varela Round'"; // Verdana
+		ctx.font = fontSize + "px normal " + settings.font;
 		ctx.fillText(text, offset, canvasheight);
 		// draw time
 		ctx.clearRect(0,0,timewidth,canvasheight);
-		ctx.font = "bold" + fontSize + "px 'Varela Round'"; // Verdana
+		ctx.font = fontSize + "px bold " + settings.font;
 		ctx.fillText(time, 0, canvasheight);
 		// loop
 		if (animationOn === true) {
@@ -447,18 +455,16 @@
 				utils.startAnimation();
 				utils.deselectAll(_jap);
 				controls.play.addClass(css.active);
-				selected.addClass("played"); // .find(".ui-icon").switchClass(css.icontodo, css.icondone);
+				selected.addClass("played");
 			}
 			else if (action === "pause") {
 				if (utils.isPlaying() && !utils.isPaused()) {
 					var p = controls.audio[0];
-					//if (p.paused === false) {
 						utils.deselectAll(_jap);
 						controls.pause.addClass(css.active);
 						
 						// player
 						p.pause();
-					//}
 				}
 			}
 			else if (action === "stop") {
@@ -508,6 +514,7 @@
 
 $.fn.jap.defaults = {
 	buttonSize: 34
+	, font: "Verdana"
 	, volume: 20
 	, formatTitle: function(src, metadata) {
 		return src;
