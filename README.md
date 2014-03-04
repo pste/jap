@@ -1,14 +1,14 @@
 # jap - just another player
 
-Jap (as in "Japan") is a jQueryUI styled HTML5 audio player. It is freely usable, but
-still in development (don't consider this a stable/final version, not yet).
+Jap (as in "Japan", a fascinating land with a fascinating culture) is a jQueryUI styled HTML5 audio player. It is freely usable, but
+still in heavy development.
 
 ### TODO
-- Playlist buttons (add -browse local/prompt uri-)
+- Playlist add button (browse local/prompt uri)
 - Sort playlist / shuffle playlist now stops playing
 
 ### KNOWN BUGS
-Still under heavy testing
+They will come ...
 
 
 ### WORKS ON
@@ -48,6 +48,7 @@ $.fn.jap.defaults
 ```
 They are:
 - buttonSize (default: 30): the size of the jap controls
+- font: (default: 'Verdana'): the font used
 - volume (default: 20): the initial value of the volume. It is a percentage [0:100] value
 - formatTitle (default: function(src, metadata) { return src; }): it is the formatting function for the song title. It is
 used by the playlist and the "now playing" scrolling view
@@ -57,6 +58,7 @@ These can be customized in the jap constructor:
 ```
 $("#jap").jap({
   buttonSize: 50,
+  font: "Orbitron", // <link href='http://fonts.googleapis.com/css?family=Orbitron:400,700' rel='stylesheet' type='text/css'>
   formatTitle: function(src ,metadata) {	
 	if ($.isEmptyObject(metadata)) return src;
 	return metadata.author + " - " + metadata.album + " - " + metadata.trackn + " - " + metadata.title;

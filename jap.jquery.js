@@ -1,6 +1,6 @@
 /**
 * @preserve Stefano Pirra (2014)
-* v1.0 - 20140301
+* v1.0 - 20140303
 */
 // http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#event-media-ended
 // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
@@ -20,8 +20,6 @@
 	var settings = null; // join defaults with custom
 	var controls = null; // save controls for convenience
 	var animationOn = false;
-	var fontColor = "#00FFDE";
-	var fontSize = 10;
 	var timeleft = false;
 	
 	var css = {
@@ -39,7 +37,7 @@
 		// extend settings
 		settings = $.extend( {}, $.fn.jap.defaults, options );
 		settings.volume = Math.min(settings.volume, 100);
-		fontSize = settings.buttonSize/3;
+		var fontSize = settings.buttonSize/3;
 		var button_1 = settings.buttonSize;
 		var button_3 = settings.buttonSize/3;
 		var miniButtonSize = (settings.buttonSize/2) - 2; // FIXED VAL (2 border)
@@ -125,7 +123,10 @@
 			container.jap("play");
 		});
 		queuecontrols.add.on("click", function(evt) {
-			// TODO
+			var uri = prompt("Insert a URI:", "http://");
+			if (uri != null) {
+				container.jap("enqueue", {src: uri}); // TODO metadata
+			}
 		});
 		queuecontrols.remove.on("click", function(evt) {
 			controls.queue.find(".ui-selected").remove();
@@ -155,6 +156,28 @@
 			controls.queue.selectable("option", "autoRefresh", true);
 		});
 		
+		// make a resizable / selectable queue;
+		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all"></div>').css({"height": settings.buttonSize/2, "clear":"both", "overflow":"hidden", "padding":0, "margin":0});
+		for (btn in queuecontrols) {
+			queuetoolbar.append(queuecontrols[btn]);
+		}
+		queuetoolbar.buttonset();
+		
+		// 
+		var queuewrap = controls.queue.wrap($("<div class='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
+		queuewrap
+				.prepend(queuetoolbar)
+				.resizable()
+				.draggable({ snap:container, snapMode:"outer", handle:queuetoolbar })
+				.on("resize", function(event, ui) {
+					var qbord_w = controls.queue.outerWidth(true) - controls.queue.width();
+					var qbord_h = controls.queue.outerHeight(true) - controls.queue.height();
+					var w = queuewrap.width() - qbord_w;
+					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
+					controls.queue.width(w).height(h);
+				})
+				.hide();
+		
 		// push controls
 		var tdcss = {"border":0, "margin":0, "padding":0};
 		settings.layout.find(".drag-container").css(tdcss)	.append(controls.drag);
@@ -168,10 +191,13 @@
 		settings.layout.find(".volume-container").css(tdcss)	.append(controls.volume);
 		settings.layout.find(".display-container").css(tdcss)	.append(controls.display);
 		settings.layout.find(".seekbar-container").css(tdcss)	.append(controls.seekbar);
-		container.append(settings.layout, controls.audio, controls.queue)
-			.draggable({handle: controls.drag})
-			.css({"font-size": fontSize, "padding": 8})
-			.addClass("ui-widget ui-widget-content ui-corner-all");
+		container.wrap("<jap style='font-size:" + fontSize + "px'></jap>") // my scope
+			.append(settings.layout, controls.audio)
+			.draggable({snap:queuewrap, snapMode:"outer", handle: controls.drag})
+			.css({"padding": 8}) // "font-size": fontSize, 
+			.addClass("ui-widget ui-widget-content ui-corner-all")
+			.parent().append(/*controls.queue*/queuewrap)
+			;
 			
 		// canvas
 		var w = controls.seekbar.width();
@@ -180,37 +206,20 @@
 		controls.display.attr("height", button_3);
 		var c = controls.display[0];
 		var ctx = c.getContext('2d');
-		fontColor = $(".ui-widget-content").css("color");
-		ctx.fillStyle = "rgba(0,0,0,0)";
-		ctx.fillRect(0,0,c.width,c.height);
+		var fontColor = container.find(".ui-widget-content:first").css("color");
+		//fontSize = container.find(".ui-widget-content:first").css("font-size");
+		var fontType = container.find(".ui-widget-content:first").css("font-family");
+		//ctx.fillStyle = "rgba(0,0,0,0)";
+		//ctx.fillRect(0,0,c.width,c.height);
+		ctx.font = fontSize + "px " + fontType;
+		ctx.fillStyle = fontColor;
 		
 		// final size fixes
 		var fullw = settings.layout.outerWidth(true);
 		var fullh = settings.layout.outerHeight(true);
 		container.css({"width": fullw, "height": fullh});
-		
-		//
-		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all"></div>').css({"height": settings.buttonSize/2, "clear":"both", "overflow":"hidden", "padding":0, "margin":0});
-		for (btn in queuecontrols) {
-			queuetoolbar.append(queuecontrols[btn]);
-		}
-		queuetoolbar.buttonset();
-		
-		// make a resizable / selectable queue;
-		var queuewrap = controls.queue.wrap($("<div id='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
-		queuewrap
-				.prepend(queuetoolbar)
-				.position({ my: "left top", at: "right+5 top", of: container})
-				.resizable()
-				.width(fullw).height(fullh)
-				.on("resize", function(event, ui) {
-					var qbord_w = controls.queue.outerWidth(true) - controls.queue.width();
-					var qbord_h = controls.queue.outerHeight(true) - controls.queue.height();
-					var w = queuewrap.width() - qbord_w;
-					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
-					controls.queue.width(w).height(h);
-				})
-				.hide();
+		queuewrap.css({"width": fullw, "height": fullh})
+				.position({ my: "left top", at: "right+5 top", of: container}); // position after "container"'s resize
 	}
 	
 	/* ::::::::::::::::::: */
@@ -236,6 +245,7 @@
 		var titlewidth = ctx.measureText(text).width;
 		var canvaswidth = c.width();
 		var canvasheight = c.height();
+		//var fontColor = controls.find(".ui-widget-content:first").css("color");
 		
 		// calculate offset
 		var offset = c.attr("offset");
@@ -249,14 +259,12 @@
 		c.attr("offset", offset);
 		
 		// draw
-		ctx.fillStyle = fontColor;		
+		//ctx.fillStyle = fontColor;
 		// title
 		ctx.clearRect(0,0,canvaswidth,canvasheight);
-		ctx.font = fontSize + "px " + settings.font;
 		ctx.fillText(text, offset, canvasheight);
 		// draw time
 		ctx.clearRect(0,0,timewidth,canvasheight);
-		ctx.font = fontSize + "px " + settings.font;
 		ctx.fillText(time, 0, canvasheight);
 		// loop
 		if (animationOn === true) {
@@ -410,8 +418,8 @@
 					param.metadata = null;
 				var txt = settings.formatTitle(param.src, param.metadata);
 				var li = $('<li>' + txt + '</li>"')
-				    .css({"font-size":fontSize, "font-family":settings.font, "font-weight":"normal", "border":0, "overflow":"hidden", "text-overflow":"ellipsis", "white-space":"nowrap"})
-				    .attr("src", param.src)
+				    .css({"font-weight":"normal", "padding-left":10, "border":0, "overflow":"hidden", "text-overflow":"ellipsis", "white-space":"nowrap"})
+				    .attr("src", param.src) // "font-size":fontSize, "font-family":settings.font, 
 				    .data("jap", param.metadata)
 				    ;
 				
@@ -515,7 +523,6 @@
 
 $.fn.jap.defaults = {
 	buttonSize: 34
-	, font: "Verdana"
 	, volume: 20
 	, formatTitle: function(src, metadata) {
 		return src;
