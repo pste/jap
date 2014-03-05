@@ -39,6 +39,7 @@ $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=3"});
 $("#jap").jap("play");
 ```
 A custom layout can also be used, to customize the container. In the jap there are these controls (with their container):
+```
 control  |  class  |  container
 ---------|-------|--------
 drag  |  drag  |    drag-container
@@ -54,6 +55,7 @@ display  |  display  |    display-container
 seekbar  |  seekbar  |    seekbar-container
 volume  |  volume  |    volume-container
 queue  |  queue  |    queue-container
+```
 
 ### PARAMETERS
 All the default parameters are exposed here:
