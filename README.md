@@ -38,7 +38,8 @@ $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=2"});
 $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=3"});
 $("#jap").jap("play");
 ```
-A custom layout can also be used, to customize the container. In the jap there are these controls (with their container):
+A custom layout can also be used, to maximize customization.
+In the jap these are the controls (with their container):
 ```
 control  |  css class |  container (css class)
 ---------|------------|-------------
@@ -55,6 +56,10 @@ display  |  display   |  display-container
 seekbar  |  seekbar   |  seekbar-container
 volume   |  volume    |  volume-container
 queue    |  queue     |  queue-container
+```
+You can choose to hide some of them (.parent() is needed to search the whole css scope):
+```
+$('#jap').parent().find(".queue-container, .playlist-container").hide();
 ```
 
 ### PARAMETERS
