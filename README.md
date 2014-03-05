@@ -6,6 +6,7 @@ The "jap" is a jQueryUI styled HTML5 audio player. It supports streaming, local 
 ### TODO
 - Playlist add button (browse local/prompt uri)
 - Snap and drag
+- Dont scroll short titles
 
 ### LICENSING
 The jap project is released under the terms of the MIT license.
@@ -37,6 +38,22 @@ $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=2"});
 $("#jap").jap("enqueue", {src: "http://127.0.0.1/Get?num=3"});
 $("#jap").jap("play");
 ```
+A custom layout can also be used, to customize the container. In the jap there are these controls (with their container):
+control  |  class  |  container
+---------|-------|--------
+drag  |  drag  |    drag-container
+prev  |  prev  |    prev-container
+play  |  play  |    play-container
+pause  |  pause  |    pause-container
+stop  |  stop  |    stop-container
+next  |  next  |    next-container
+loop  |  loop  |    shuffleloop-container
+shuffle  |  shuffle  |    shuffleloop-container
+playlist  |  playlist  |    playlist-container
+display  |  display  |    display-container
+seekbar  |  seekbar  |    seekbar-container
+volume  |  volume  |    volume-container
+queue  |  queue  |    queue-container
 
 ### PARAMETERS
 All the default parameters are exposed here:
@@ -45,8 +62,6 @@ $.fn.jap.defaults
 ```
 They are:
 - buttonSize (default: 30): the size of the jap controls
-- font: (default: 'Verdana'): the font used
-- volume (default: 20): the initial value of the volume. It is a percentage [0:100] value
 - formatTitle (default: function(src, metadata) { return src; }): it is the formatting function for the song title. It is
 used by the playlist and the "now playing" scrolling view
 - layout (default: a html table): it is the container for each control of the jap
@@ -55,7 +70,6 @@ These can be customized in the jap constructor:
 ```
 $("#jap").jap({
   buttonSize: 50,
-  font: "Orbitron", // <link href='http://fonts.googleapis.com/css?family=Orbitron:400,700' rel='stylesheet' type='text/css'>
   formatTitle: function(src ,metadata) {	
 	if ($.isEmptyObject(metadata)) return src;
 	return metadata.author + " - " + metadata.album + " - " + metadata.trackn + " - " + metadata.title;

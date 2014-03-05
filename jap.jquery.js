@@ -172,12 +172,12 @@
 		for (btn in queuecontrols) {
 			queuetoolbar.append(queuecontrols[btn]);
 		}
-		queuetoolbar.buttonset();
+		queuetoolbar.buttonset().css({"cursor":"pointer"});
 		
 		// 
-		var queuewrap = controls.queue.wrap($("<div class='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
-		queuewrap
-				.prepend(queuetoolbar)
+		var queuewrap = settings.layout.find(".queue-container");//controls.queue.wrap($("<div class='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
+		queuewrap	
+				.css("position","absolute")
 				.resizable()
 				.draggable({ snap:container, snapMode:"outer", handle:queuetoolbar })
 				.on("resize", function(event, ui) {
@@ -187,7 +187,6 @@
 					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
 					controls.queue.width(w).height(h);
 				})
-				.css({"cursor":"pointer"})
 				.hide();
 		
 		// push controls
@@ -203,6 +202,7 @@
 		settings.layout.find(".volume-container").css(tdcss)	.append(controls.volume);
 		settings.layout.find(".display-container").css(tdcss)	.append(controls.display);
 		settings.layout.find(".seekbar-container").css(tdcss)	.append(controls.seekbar);
+		settings.layout.find(".queue-container").append(queuetoolbar, controls.queue)
 		container.wrap("<jap style='font-size:" + fontSize + "px'></jap>") // my scope
 			.append(settings.layout, controls.audio)
 			.draggable({snap:queuewrap, snapMode:"outer", handle: controls.drag})
@@ -561,10 +561,11 @@ $.fn.jap.defaults = {
 	buttonSize: 34
 	, formatTitle: function(src, metadata) {
 		return src;
-	}
-	, layout: $('<table> \
-		<tr> \
-			<td class="drag-container" colspan="8" ></td> \
+	} 
+	, layout: $('<table><tr> \
+			<td class="drag-container" colspan="8" > \
+			<div class="queue-container"></div> \
+			</td> \
 		</tr> \
 		<tr> \
 			<td class="prev-container"></td> \
@@ -581,6 +582,5 @@ $.fn.jap.defaults = {
 		</tr> \
 		<tr> \
 			<td class="seekbar-container" colspan="7" ></td> \
-		</tr> \
-		</table>')
+		</tr></table>')
 }
