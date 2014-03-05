@@ -19,8 +19,14 @@
 	
 	var settings = null; // join defaults with custom
 	var controls = null; // save controls for convenience
-	var animationOn = false;
-	var timeleft = false;
+	var animationOn = false; // TODO: UGLY GLOBAL
+	var displaymode = {
+	  TIME_TITLE: 0
+	  , TIMELEFT_TITLE: 1
+	  , TIMELEFT_URI: 2
+	  , TIME_URI: 3	  
+	};
+	var nowdisplay = displaymode.TIME_TITLE; // TODO: UGLY GLOBAL
 	
 	var css = {
 		active: "ui-state-error"
@@ -41,6 +47,7 @@
 		var button_1 = settings.buttonSize;
 		var button_3 = settings.buttonSize/3;
 		var miniButtonSize = (settings.buttonSize/2) - 2; // FIXED VAL (2 border)
+		var initialvolume = 25;
 		
 		// build interface
 		var css_btn = {"width": button_1, "height": button_1, "float": "left"};
@@ -57,7 +64,7 @@
 			, playlist: 	$('<div class="playlist"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} )	.css(css_btn).css({"font-size":"0.9em"})
 			, display:	$('<canvas class="display"></canvas>').css({"border-radius": "2px", "border": 1, "clear": "both", "height": button_3})
 			, seekbar:	$('<div class="seekbar"></div>').progressbar()	.css({"clear": "both", "height": button_3})
-			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": settings.volume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
+			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": initialvolume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
 			, audio:	$("<audio></audio>")			
 			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7})
 		};
@@ -76,7 +83,7 @@
 							controls.seekbar.progressbar("option", "value", x);
 						})
 						.on("ended", function() { container.jap("next"); });
-		controls.audio[0].volume = settings.volume / 100;
+		controls.audio[0].volume = initialvolume / 100;
 		controls.queue	.on("selectableselecting", function(event, ui) 	{ $(ui.selecting).removeClass(css.selecting).addClass(css.selected); })
 				.on("selectableunselecting", function(event, ui){ $(ui.unselecting).removeClass(css.selected + " " + css.selecting);	})
 				.on("selectableselected", function(event, ui) 	{ $(ui.selected).removeClass(css.selected).addClass(css.selecting); })
@@ -103,7 +110,7 @@
 			else qwrap.fadeIn();
 		});
 		controls.display.on("click",	function() {
-			timeleft = !timeleft;
+			nowdisplay = (nowdisplay+1)%4;
 		});
 		controls.seekbar.on("click", 	function(evt) {
 			var myoffs = controls.seekbar.offset();
@@ -133,17 +140,19 @@
 		});
 		queuecontrols.shuffle.on("click", function(evt) {
 			controls.queue.selectable("option", "autoRefresh", false);
-			var q = controls.queue.find("li").detach(); // can't "dequeue": it uses .remove()
+			var q = controls.queue.find("li");
 			q.sort(function(a,b){
 				return Math.random() > Math.random();
 			}).each(function(i,o) {
-				container.jap("enqueue", utils.queueitem(o))
+				var $o = $(o);
+				$o.detach();
+				controls.queue.append($o);
 			});
-			controls.queue.selectable("option", "autoRefresh", true);
+			utils.redrawqueue();
 		});
 		queuecontrols.sort.on("click", function(evt) {
-			controls.queue.selectable("option", "autoRefresh", false);
-			var q = controls.queue.find("li").detach(); // can't "dequeue": it uses .remove()
+			controls.queue.selectable("destroy");
+			var q = controls.queue.find("li"); 
 			q.sort(function(a,b){
 				var $a = $(a);
 				var $b = $(b);
@@ -151,9 +160,11 @@
 				var t2 = settings.formatTitle($b.text(), $b.data("jap"));
 				return t1.localeCompare(t2);
 			}).each(function(i,o) {
-				container.jap("enqueue", utils.queueitem(o))
+				var $o = $(o);
+				$o.detach();
+				controls.queue.append($o);
 			});
-			controls.queue.selectable("option", "autoRefresh", true);
+			utils.redrawqueue();
 		});
 		
 		// make a resizable / selectable queue;
@@ -176,6 +187,7 @@
 					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
 					controls.queue.width(w).height(h);
 				})
+				.css({"cursor":"pointer"})
 				.hide();
 		
 		// push controls
@@ -231,13 +243,28 @@
 		
 		// get text
 		var selected = controls.queue.children("li." + css.playing); // little hacky
-		var text = settings.formatTitle(selected.text(), selected.data("jap"));
-		var time = 0;
+		var text = ""; // settings.formatTitle(selected.text(), selected.data("jap"));
+		var time = ""; // utils.timetext(p.currentTime);
 		if (p.seekable.length > 0) {
-			if (timeleft)
-			  time = "-" + utils.timetext(p.duration-p.currentTime);
-			else
-			  time = utils.timetext(p.currentTime);
+			switch (nowdisplay)
+			{
+			  case displaymode.TIME_TITLE:
+			    time = utils.timetext(p.currentTime);
+			    text = settings.formatTitle(selected.text(), selected.data("jap"));
+			    break;
+			  case displaymode.TIMELEFT_TITLE: 
+			    time = (p.duration!=Infinity)?"-" + utils.timetext(p.duration-p.currentTime):utils.timetext(p.currentTime);
+			    text = settings.formatTitle(selected.text(), selected.data("jap"));
+			    break;
+			  case displaymode.TIME_URI:
+			    time = utils.timetext(p.currentTime);
+			    text = selected.attr("src");
+			    break;
+			  case displaymode.TIMELEFT_URI: 
+			    time = (p.duration!=Infinity)?"-" + utils.timetext(p.duration-p.currentTime):utils.timetext(p.currentTime);
+			    text = selected.attr("src");
+			    break;
+			}
 		}
 		
 		// some measure
@@ -332,7 +359,7 @@
 				if (next.length == 0) {
 					if (isLoop)  {
 						// prepare next full queue loop
-						controls.queue.children("li").removeClass("played"); // .find(".ui-icon").switchClass(css.icondone, css.icontodo);;
+						controls.queue.children("li").removeClass("played");
 						next = controls.queue.children("li:first");
 						if (cmd === "next")
 							next = controls.queue.children("li:first");
@@ -358,6 +385,16 @@
 			var mmS = (mm<10)?"0"+mm:""+mm;
 			var ssS = (ss<10)?"0"+ss:""+ss;
 			return /*hhS+":"+*/mmS+":"+ssS;
+		}
+		,redrawqueue: function() {
+			var items = controls.queue.children("li");
+			items.removeClass("ui-corner-top ui-corner-bottom");
+			items.first().addClass("ui-corner-top");
+			items.last().addClass("ui-corner-bottom");
+			
+			// TODO: need to rebuild the selectable BUT have to check if multiple init is safe .. maybe force redraw?
+			controls.queue.selectable();
+			controls.queue.parent().trigger("resize", {element: controls.queue.parent()}); // TODO :NEEDED?
 		}
 		/*::: HTML5 AUDIO UTILS :::*/
 		,getTrackPercentage: function(p) {
@@ -408,31 +445,30 @@
 		}
 		else 
 		{
-			if (typeof(param) == "undefined") dbg("%s: -", action); // console.log("%s: -", action);
-			else dbg("%s: %s", action, JSON.stringify(param)); // console.log("%s: %s", action, JSON.stringify(param));
+			if (typeof(param) == "undefined") dbg("%s: -", action);
+			else dbg("%s: %s", action, JSON.stringify(param));
 			var _jap = this;
 			
 			//
 			if (action === "enqueue") { // adds one element to the (html 'li') queue. Param: {src: "title.mp2", metadata: (tipically json)}
+				// handle a string as single param
+				if (typeof(param) == "string") {
+					param = {src: param};
+				}
+				// fix metadata
 				if (typeof(param.metadata) == "undefined")
 					param.metadata = null;
+				// 
 				var txt = settings.formatTitle(param.src, param.metadata);
 				var li = $('<li>' + txt + '</li>"')
-				    .css({"font-weight":"normal", "padding-left":10, "border":0, "overflow":"hidden", "text-overflow":"ellipsis", "white-space":"nowrap"})
-				    .attr("src", param.src) // "font-size":fontSize, "font-family":settings.font, 
+				    .css({"font-weight":"normal", "padding-left":10, "padding-right":10, "border":0, "overflow":"hidden", "text-overflow":"ellipsis", "white-space":"nowrap"})
+				    .attr("src", param.src)
 				    .data("jap", param.metadata)
 				    ;
 				
 				//
 				controls.queue.append(li);
-				var items = controls.queue.children("li");
-				items.removeClass("ui-corner-top ui-corner-bottom");
-				items.first().addClass("ui-corner-top");
-				items.last().addClass("ui-corner-bottom");
-				
-				//if (doTheFix) 
-				controls.queue.selectable(); // TODO: check if multiple init is safe .. maybe force redraw?
-				controls.queue.parent().trigger("resize", {element: controls.queue.parent()}); // TEST:NEEDED?
+				utils.redrawqueue();
 			}
 			if (action === "dequeue") { // remove the nth elem from the queue. Param: { index: 2 }
 				controls.queue.eq(param.index).remove();
@@ -523,7 +559,6 @@
 
 $.fn.jap.defaults = {
 	buttonSize: 34
-	, volume: 20
 	, formatTitle: function(src, metadata) {
 		return src;
 	}

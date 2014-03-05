@@ -1,11 +1,10 @@
 # jap - just another player
 ![](https://raw.github.com/pste/jap/master/jap.png)
 
-Jap (as in "Japan", a fascinating land with a fascinating culture) is a jQueryUI styled HTML5 audio player. 
+The "jap" is a jQueryUI styled HTML5 audio player. It supports streaming, local (uri) playing, positioning, volume and playlists.
 
 ### TODO
 - Playlist add button (browse local/prompt uri)
-- Sort playlist / shuffle playlist now stops playing
 - Snap and drag
 
 ### LICENSING
