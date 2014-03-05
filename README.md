@@ -40,21 +40,21 @@ $("#jap").jap("play");
 ```
 A custom layout can also be used, to customize the container. In the jap there are these controls (with their container):
 ```
-control  |  class  |  container
----------|-------|--------
-drag  |  drag  |    drag-container
-prev  |  prev  |    prev-container
-play  |  play  |    play-container
-pause  |  pause  |    pause-container
-stop  |  stop  |    stop-container
-next  |  next  |    next-container
-loop  |  loop  |    shuffleloop-container
-shuffle  |  shuffle  |    shuffleloop-container
-playlist  |  playlist  |    playlist-container
-display  |  display  |    display-container
-seekbar  |  seekbar  |    seekbar-container
-volume  |  volume  |    volume-container
-queue  |  queue  |    queue-container
+control  |  css class |  container (css class)
+---------|------------|-------------
+drag     |  drag      |  drag-container
+prev     |  prev      |  prev-container
+play     |  play      |  play-container
+pause    |  pause     |  pause-container
+stop     |  stop      |  stop-container
+next     |  next      |  next-container
+loop     |  loop      |  shuffleloop-container
+shuffle  |  shuffle   |  shuffleloop-container
+playlist |  playlist  |  playlist-container
+display  |  display   |  display-container
+seekbar  |  seekbar   |  seekbar-container
+volume   |  volume    |  volume-container
+queue    |  queue     |  queue-container
 ```
 
 ### PARAMETERS
