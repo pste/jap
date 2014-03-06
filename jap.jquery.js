@@ -1,6 +1,7 @@
 /**
 * @preserve Stefano Pirra (2014)
-* v1.0 - 20140303
+* v0.9 beta - 20140306
+* Released under MIT license (http://en.wikipedia.org/wiki/MIT_License)
 */
 // http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#event-media-ended
 // https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
@@ -17,16 +18,18 @@
 	
 	/* ::::::::::::::::::: */
 	
-	var settings = null; // join defaults with custom
-	var controls = null; // save controls for convenience
-	var animationOn = false; // TODO: UGLY GLOBAL
 	var displaymode = {
 	  TIME_TITLE: 0
 	  , TIMELEFT_TITLE: 1
 	  , TIMELEFT_URI: 2
 	  , TIME_URI: 3	  
 	};
-	var nowdisplay = displaymode.TIME_TITLE; // TODO: UGLY GLOBAL
+	var settings = {}; // I'll join defaults with custom
+	var coresettings = {
+		animationOn: false
+		, displaymode: displaymode.TIME_TITLE
+	}
+	var controls = null; // save controls for convenience
 	
 	var css = {
 		active: "ui-state-error"
@@ -41,7 +44,7 @@
 	
 	function init(options, container) {
 		// extend settings
-		settings = $.extend( {}, $.fn.jap.defaults, options );
+		settings = $.extend(coresettings, $.fn.jap.defaults, options);
 		settings.volume = Math.min(settings.volume, 100);
 		var fontSize = settings.buttonSize/3;
 		var button_1 = settings.buttonSize;
@@ -49,19 +52,24 @@
 		var miniButtonSize = (settings.buttonSize/2) - 2; // FIXED VAL (2 border)
 		var initialvolume = 25;
 		
+		// ::: INTERFACE :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+		
+		// build the jap CSS scope
+		var _jap = container.wrap("<jap style='font-size:" + fontSize + "px'></jap>").parent();
+		
 		// build interface
 		var css_btn = {"width": button_1, "height": button_1, "float": "left"};
 		var css_btn_mini = {"width": miniButtonSize, "height": miniButtonSize};
 		controls = {
 			drag:	 	$('<div class="drag ui-widget-header ui-corner-all" style="height:10px; clear:both; margin-bottom:4; cursor:pointer"></div>')
-			, prev: 	$('<div class="prev"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-prev" }} ).css(css_btn)
-			, play: 	$('<div class="play"></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )		.css(css_btn)
-			, pause: 	$('<div class="pause"></div>')	.button({text: false, icons: { primary: "ui-icon-pause" }} )	.css(css_btn)
-			, stop: 	$('<div class="stop"></div>')	.button({text: false, icons: { primary: "ui-icon-stop" }} )		.css(css_btn)
-			, next: 	$('<div class="next"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-next" }} ).css(css_btn)
+			, prev: 	$('<div class="prev japbutton"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-prev" }} )
+			, play: 	$('<div class="play japbutton"></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )
+			, pause: 	$('<div class="pause japbutton"></div>')	.button({text: false, icons: { primary: "ui-icon-pause" }} )
+			, stop: 	$('<div class="stop japbutton"></div>')	.button({text: false, icons: { primary: "ui-icon-stop" }} )
+			, next: 	$('<div class="next japbutton"></div>')	.button({text: false, icons: { primary: "ui-icon-seek-next" }} )
 			, loop:		$('<div class="loop"></div>')	.button({text: false, icons: { primary: "ui-icon-refresh" }} )	.css(css_btn_mini).css({"float":"left", "clear":"both"})
 			, shuffle:	$('<div class="shuffle"></div>').button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini).css({"float":"left", "clear":"both"})
-			, playlist: 	$('<div class="playlist"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} )	.css(css_btn).css({"font-size":"0.9em"})
+			, playlist: $('<div class="playlist japbutton"></div>').button({text: false, icons: { primary: "ui-icon-eject" }} ).css({"font-size":"0.9em"})
 			, display:	$('<canvas class="display"></canvas>').css({"border-radius": "2px", "border": 1, "clear": "both", "height": button_3})
 			, seekbar:	$('<div class="seekbar"></div>').progressbar()	.css({"clear": "both", "height": button_3})
 			, volume:	$('<div class="volume"></div>')	.slider({ orientation: "vertical", "value": initialvolume}).css({"font-size":"0.5em", "height": button_1+(2*button_3)})
@@ -69,12 +77,88 @@
 			, queue:	$("<ol class='queue ui-widget ui-widget-content ui-corner-all'></ol>").css({"list-style-type":"none", "overflow":"hidden", "margin": 0, "padding": 7})
 		};
 		var queuecontrols  = {
-			play: 	$('<div></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, add: $('<div></div>')		.button({text: false, icons: { primary: "ui-icon-plus" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, remove: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-minus" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, sort: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-arrowthick-1-s" }} ).css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
-			, shuffle: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini)//.css({"float":"left", "margin":"0px 5px 0px 5px"})
+			play: 	$('<div></div>')	.button({text: false, icons: { primary: "ui-icon-play" }} )		.css(css_btn_mini)
+			, add: $('<div></div>')		.button({text: false, icons: { primary: "ui-icon-plus" }} )		.css(css_btn_mini)
+			, remove: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-minus" }} )	.css(css_btn_mini)
+			, sort: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-arrowthick-1-s" }} ).css(css_btn_mini)
+			, shuffle: $('<div></div>')	.button({text: false, icons: { primary: "ui-icon-shuffle" }} )	.css(css_btn_mini)
 		};
+		
+		// make a resizable / selectable queue;
+		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all"></div>').css({"height": settings.buttonSize/2, "clear":"both", "overflow":"hidden", "padding":0, "margin":0});
+		for (btn in queuecontrols) {
+			queuetoolbar.append(queuecontrols[btn]);
+		}
+		queuetoolbar.buttonset().css({"cursor":"pointer"});
+		
+		// build the layout
+		container.append(settings.layout, controls.audio);
+		
+		// style the container
+		container
+			.draggable({snap:queuewrap, snapMode:"outer", handle: controls.drag})
+			.css({"padding": 8})
+			.addClass("ui-widget ui-widget-content ui-corner-all")
+			;
+			
+		// 
+		var queuewrap = _jap.find(".queue-container");
+		queuewrap	
+				.css("position","absolute")
+				.resizable()
+				.draggable({ snap:container, snapMode:"outer", handle:queuetoolbar })
+				.on("resize", function(event, ui) { // resize the inner (selectable) list of items
+					var qbord_w = controls.queue.outerWidth(true) - controls.queue.width();
+					var qbord_h = controls.queue.outerHeight(true) - controls.queue.height();
+					var w = queuewrap.width() - qbord_w;
+					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
+					controls.queue.width(w).height(h);
+				})
+				.hide();
+		
+		// push controls into containers
+		
+		_jap.find(".drag-container")		.append(controls.drag);
+		_jap.find(".prev-container")		.append(controls.prev);
+		_jap.find(".play-container")		.append(controls.play);
+		_jap.find(".pause-container")		.append(controls.pause);
+		_jap.find(".stop-container")		.append(controls.stop);
+		_jap.find(".next-container")		.append(controls.next);
+		_jap.find(".playlist-container")	.append(controls.playlist);
+		_jap.find(".shuffleloop-container")	.append(controls.shuffle, controls.loop);
+		_jap.find(".volume-container")		.append(controls.volume);
+		_jap.find(".display-container")		.append(controls.display);
+		_jap.find(".seekbar-container")		.append(controls.seekbar);
+		_jap.find(".queue-container")		.append(queuetoolbar, controls.queue);
+		
+		// ::: FINAL CSS FIXES :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+		
+		var tdcss = {"border":0, "margin":0, "padding":0};
+		_jap.find("[class*='-container']").css(tdcss);
+		_jap.find(".japbutton").css(css_btn);
+		
+		// canvas
+		var w = controls.seekbar.width();
+		controls.display.css("width", w);
+		controls.display.attr("width", w);
+		controls.display.attr("height", button_3);
+		var c = controls.display[0];
+		var ctx = c.getContext('2d');
+		var fontColor = container.find(".ui-widget-content:first").css("color");
+		var fontType = container.find(".ui-widget-content:first").css("font-family");
+		//ctx.fillStyle = "rgba(0,0,0,0)";
+		//ctx.fillRect(0,0,c.width,c.height);
+		ctx.font = fontSize + "px " + fontType;
+		ctx.fillStyle = fontColor;
+		
+		// final size fixes
+		var fullw = settings.layout.outerWidth(true);
+		var fullh = settings.layout.outerHeight(true);
+		container.css({"width": fullw, "height": fullh});
+		queuewrap.css({"width": fullw, "height": fullh})
+				.position({ my: "left top", at: "right+5 top", of: container}); // position after "container"'s resize
+				
+		// ::: EVENTS :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 		
 		// attach plugin events to the controls
 		controls.audio	.on("timeupdate", function() {
@@ -110,7 +194,7 @@
 			else qwrap.fadeIn();
 		});
 		controls.display.on("click",	function() {
-			nowdisplay = (nowdisplay+1)%4;
+			settings.displaymode = (settings.displaymode + 1) % 4;
 		});
 		controls.seekbar.on("click", 	function(evt) {
 			var myoffs = controls.seekbar.offset();
@@ -166,72 +250,6 @@
 			});
 			utils.redrawqueue();
 		});
-		
-		// make a resizable / selectable queue;
-		var queuetoolbar = $('<div class="ui-widget ui-widget-content ui-corner-all"></div>').css({"height": settings.buttonSize/2, "clear":"both", "overflow":"hidden", "padding":0, "margin":0});
-		for (btn in queuecontrols) {
-			queuetoolbar.append(queuecontrols[btn]);
-		}
-		queuetoolbar.buttonset().css({"cursor":"pointer"});
-		
-		// 
-		var queuewrap = settings.layout.find(".queue-container");//controls.queue.wrap($("<div class='queue-wrap' style='position:absolute'></div>")).parent(); // .wrap(..) uses a copy of the element
-		queuewrap	
-				.css("position","absolute")
-				.resizable()
-				.draggable({ snap:container, snapMode:"outer", handle:queuetoolbar })
-				.on("resize", function(event, ui) {
-					var qbord_w = controls.queue.outerWidth(true) - controls.queue.width();
-					var qbord_h = controls.queue.outerHeight(true) - controls.queue.height();
-					var w = queuewrap.width() - qbord_w;
-					var h = queuewrap.height() - qbord_h - queuetoolbar.outerHeight(true);
-					controls.queue.width(w).height(h);
-				})
-				.hide();
-		
-		// push controls
-		var tdcss = {"border":0, "margin":0, "padding":0};
-		settings.layout.find(".drag-container").css(tdcss)	.append(controls.drag);
-		settings.layout.find(".prev-container").css(tdcss)	.append(controls.prev);
-		settings.layout.find(".play-container").css(tdcss)	.append(controls.play);
-		settings.layout.find(".pause-container").css(tdcss)	.append(controls.pause);
-		settings.layout.find(".stop-container").css(tdcss)	.append(controls.stop);
-		settings.layout.find(".next-container").css(tdcss)	.append(controls.next);
-		settings.layout.find(".playlist-container").css(tdcss)	.append(controls.playlist);
-		settings.layout.find(".shuffleloop-container").css(tdcss).append(controls.shuffle, controls.loop);
-		settings.layout.find(".volume-container").css(tdcss)	.append(controls.volume);
-		settings.layout.find(".display-container").css(tdcss)	.append(controls.display);
-		settings.layout.find(".seekbar-container").css(tdcss)	.append(controls.seekbar);
-		settings.layout.find(".queue-container").append(queuetoolbar, controls.queue)
-		container.wrap("<jap style='font-size:" + fontSize + "px'></jap>") // my scope
-			.append(settings.layout, controls.audio)
-			.draggable({snap:queuewrap, snapMode:"outer", handle: controls.drag})
-			.css({"padding": 8}) // "font-size": fontSize, 
-			.addClass("ui-widget ui-widget-content ui-corner-all")
-			.parent().append(/*controls.queue*/queuewrap)
-			;
-			
-		// canvas
-		var w = controls.seekbar.width();
-		controls.display.css("width", w)
-		controls.display.attr("width", w);
-		controls.display.attr("height", button_3);
-		var c = controls.display[0];
-		var ctx = c.getContext('2d');
-		var fontColor = container.find(".ui-widget-content:first").css("color");
-		//fontSize = container.find(".ui-widget-content:first").css("font-size");
-		var fontType = container.find(".ui-widget-content:first").css("font-family");
-		//ctx.fillStyle = "rgba(0,0,0,0)";
-		//ctx.fillRect(0,0,c.width,c.height);
-		ctx.font = fontSize + "px " + fontType;
-		ctx.fillStyle = fontColor;
-		
-		// final size fixes
-		var fullw = settings.layout.outerWidth(true);
-		var fullh = settings.layout.outerHeight(true);
-		container.css({"width": fullw, "height": fullh});
-		queuewrap.css({"width": fullw, "height": fullh})
-				.position({ my: "left top", at: "right+5 top", of: container}); // position after "container"'s resize
 	}
 	
 	/* ::::::::::::::::::: */
@@ -243,28 +261,34 @@
 		
 		// get text
 		var selected = controls.queue.children("li." + css.playing); // little hacky
-		var text = ""; // settings.formatTitle(selected.text(), selected.data("jap"));
-		var time = ""; // utils.timetext(p.currentTime);
-		if (p.seekable.length > 0) {
-			switch (nowdisplay)
-			{
-			  case displaymode.TIME_TITLE:
-			    time = utils.timetext(p.currentTime);
-			    text = settings.formatTitle(selected.text(), selected.data("jap"));
-			    break;
-			  case displaymode.TIMELEFT_TITLE: 
-			    time = (p.duration!=Infinity)?"-" + utils.timetext(p.duration-p.currentTime):utils.timetext(p.currentTime);
-			    text = settings.formatTitle(selected.text(), selected.data("jap"));
-			    break;
-			  case displaymode.TIME_URI:
-			    time = utils.timetext(p.currentTime);
-			    text = selected.attr("src");
-			    break;
-			  case displaymode.TIMELEFT_URI: 
-			    time = (p.duration!=Infinity)?"-" + utils.timetext(p.duration-p.currentTime):utils.timetext(p.currentTime);
-			    text = selected.attr("src");
-			    break;
-			}
+		var text = "";
+		var time = "";
+		var nd = settings.displaymode;
+		
+		// while streaming (sometimes) I don't know duration and I can't calculate time left
+		if (p.duration==Infinity) { 
+			if 		(nd == displaymode.TIMELEFT_TITLE) nd = displaymode.TIME_TITLE;
+			else if (nd == displaymode.TIMELEFT_URI) nd = displaymode.TIME_URI;
+		}
+		// switch display mode
+		switch (nd)
+		{
+		  case displaymode.TIME_TITLE:
+			time = utils.timetext(p.currentTime);
+			text = settings.formatTitle(selected.text(), selected.data("jap"));
+			break;
+		  case displaymode.TIMELEFT_TITLE: 
+			time = "-" + utils.timetext(p.duration-p.currentTime);
+			text = settings.formatTitle(selected.text(), selected.data("jap"));
+			break;
+		  case displaymode.TIME_URI:
+			time = utils.timetext(p.currentTime);
+			text = selected.attr("src");
+			break;
+		  case displaymode.TIMELEFT_URI: 
+			time = "-" + utils.timetext(p.duration-p.currentTime);
+			text = selected.attr("src");
+			break;
 		}
 		
 		// some measure
@@ -272,16 +296,19 @@
 		var titlewidth = ctx.measureText(text).width;
 		var canvaswidth = c.width();
 		var canvasheight = c.height();
-		//var fontColor = controls.find(".ui-widget-content:first").css("color");
 		
 		// calculate offset
 		var offset = c.attr("offset");
 		if (typeof(offset) === "undefined")
-			offset = titlewidth; // starts here
-		else {
+			offset = timewidth; // starts here
+		
+		if (titlewidth > (canvaswidth-timewidth)) { // let's scroll long titles
 			offset -= 1; // move to the left
 			if (-offset >= titlewidth) // if everything to the left
 				offset = titlewidth; // restarts here
+		}
+		else {
+			offset = timewidth; // don't scroll short titles
 		}
 		c.attr("offset", offset);
 		
@@ -294,7 +321,7 @@
 		ctx.clearRect(0,0,timewidth,canvasheight);
 		ctx.fillText(time, 0, canvasheight);
 		// loop
-		if (animationOn === true) {
+		if (settings.animationOn === true) {
 			if (typeof(window.requestAnimationFrame) == "undefined") setTimeout(tick, 20);
 			else window.requestAnimationFrame(tick);
 		}
@@ -384,6 +411,8 @@
 			var hhS = (hh<10)?"0"+hh:""+hh;
 			var mmS = (mm<10)?"0"+mm:""+mm;
 			var ssS = (ss<10)?"0"+ss:""+ss;
+			if (isNaN(mmS)) mmS = "00";
+			if (isNaN(ssS)) ssS = "00";
 			return /*hhS+":"+*/mmS+":"+ssS;
 		}
 		,redrawqueue: function() {
@@ -407,13 +436,13 @@
 		}
 		/*::: ANIMATIONS :::*/
 		, startAnimation: function() {
-			if (animationOn !== true) {
-				animationOn = true;
+			if (settings.animationOn !== true) {
+				settings.animationOn = true;
 				tick();
 			}
 		}
 		, stopAnimation: function() {
-			animationOn = false;
+			settings.animationOn = false;
 		}
 		/*::: AUDIO UTILS :::*/
 		, isPlaying: function() {
@@ -474,6 +503,7 @@
 				controls.queue.eq(param.index).remove();
 			}
 			else if (action ==="seek") { // seek the current song to the given percentage (0:100). Param: {percentage: 60}
+				// stream seek html5 spec: http://../test.ogg#t=60 // TODO
 				var p = controls.audio[0];
 				if (utils.isOk(p)) {
 					var secs = param.percentage * p.duration / 100;
@@ -552,7 +582,7 @@
 			_jap.trigger(action, _jap);
 		}
 		
-		// chain ability
+		// chainability
 		return this;
 	};
 }(jQuery));
@@ -564,7 +594,6 @@ $.fn.jap.defaults = {
 	} 
 	, layout: $('<table><tr> \
 			<td class="drag-container" colspan="8" > \
-			<div class="queue-container"></div> \
 			</td> \
 		</tr> \
 		<tr> \
@@ -582,5 +611,6 @@ $.fn.jap.defaults = {
 		</tr> \
 		<tr> \
 			<td class="seekbar-container" colspan="7" ></td> \
-		</tr></table>')
+		</tr></table> \
+		<div class="queue-container"></div>')
 }
