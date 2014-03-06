@@ -2,6 +2,7 @@
 ![](https://raw.github.com/pste/jap/master/jap.png)
 
 The "jap" is a jQueryUI styled HTML5 audio player. It supports streaming, local (uri) playing, positioning, volume and playlists.
+This is the 20140306 build.
 
 ### TODO
 - Playlist add button (browse local/prompt uri)
@@ -68,7 +69,7 @@ All the default parameters are exposed here:
 $.fn.jap.defaults
 ```
 They are:
-- buttonSize (default: 30): the size of the jap controls
+- buttonSize (default: 30): the px size of the jap controls
 - formatTitle (default: function(src, metadata) { return src; }): it is the formatting function for the song title. It is
 used by the playlist and the "now playing" scrolling view
 - layout (default: a html table): it is the container for each control of the jap
