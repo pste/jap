@@ -1,6 +1,6 @@
 /**
 * @preserve Stefano Pirra (2014)
-* v0.9 beta - 20140306
+* v0.9 beta - 20140307
 * Released under MIT license (http://en.wikipedia.org/wiki/MIT_License)
 */
 // http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#event-media-ended
@@ -146,8 +146,6 @@
 		var ctx = c.getContext('2d');
 		var fontColor = container.find(".ui-widget-content:first").css("color");
 		var fontType = container.find(".ui-widget-content:first").css("font-family");
-		//ctx.fillStyle = "rgba(0,0,0,0)";
-		//ctx.fillRect(0,0,c.width,c.height);
 		ctx.font = fontSize + "px " + fontType;
 		ctx.fillStyle = fontColor;
 		
@@ -162,8 +160,10 @@
 		
 		// attach plugin events to the controls
 		controls.audio	.on("timeupdate", function() {
-							var p = controls.audio[0];
-							var x = utils.getTrackPercentage(p);
+							var pos = container.jap("option", "position");
+							var dur = container.jap("option", "duration");
+							var x = 0;
+							if (dur != 0) x = pos / dur * 100;
 							controls.seekbar.progressbar("option", "value", x);
 						})
 						.on("ended", function() { container.jap("next"); });
@@ -267,7 +267,7 @@
 		
 		// while streaming (sometimes) I don't know duration and I can't calculate time left
 		if (p.duration==Infinity) { 
-			if 		(nd == displaymode.TIMELEFT_TITLE) nd = displaymode.TIME_TITLE;
+			if (nd == displaymode.TIMELEFT_TITLE) nd = displaymode.TIME_TITLE;
 			else if (nd == displaymode.TIMELEFT_URI) nd = displaymode.TIME_URI;
 		}
 		// switch display mode
@@ -426,12 +426,7 @@
 			controls.queue.parent().trigger("resize", {element: controls.queue.parent()}); // TODO :NEEDED?
 		}
 		/*::: HTML5 AUDIO UTILS :::*/
-		,getTrackPercentage: function(p) {
-			if (p.seekable.length > 0)
-				return p.currentTime / p.seekable.end(0) * 100;
-			return 0;
-		}
-		, isOk: function(p) {
+		, isLoaded: function(p) {
 			return !isNaN(p.duration);
 		}
 		/*::: ANIMATIONS :::*/
@@ -467,17 +462,17 @@
 	/* ::::::::::::::::::: */
 	
 	$.fn.jap = function(action, param) {
+		var _jap = this;
 		if (typeof(action) != "string") {
 			//console.log("init!");
 			dbg("init!");
-			init(action, this);
+			init(action, _jap);
 		}
 		else 
 		{
 			if (typeof(param) == "undefined") dbg("%s: -", action);
 			else dbg("%s: %s", action, JSON.stringify(param));
-			var _jap = this;
-			
+ 
 			//
 			if (action === "enqueue") { // adds one element to the (html 'li') queue. Param: {src: "title.mp2", metadata: (tipically json)}
 				// handle a string as single param
@@ -505,9 +500,9 @@
 			else if (action ==="seek") { // seek the current song to the given percentage (0:100). Param: {percentage: 60}
 				// stream seek html5 spec: http://../test.ogg#t=60 // TODO
 				var p = controls.audio[0];
-				if (utils.isOk(p)) {
-					var secs = param.percentage * p.duration / 100;
-					p.currentTime = secs;
+				if (utils.isLoaded(p)) {
+					var duration = _jap.jap("option", "duration");
+					p.currentTime = (param.percentage * duration / 100);
 				}
 				else {
 					controls.seekbar.progressbar("value", 0);
@@ -549,7 +544,7 @@
 					controls.seekbar.progressbar("value", 0);
 					
 					// player
-					if (utils.isOk(p)) {
+					if (utils.isLoaded(p)) {
 						p.pause();
 						p.currentTime = 0;
 					}
@@ -576,6 +571,27 @@
 					_jap.jap("play");
 				else
 					_jap.jap("stop");
+			}
+			else if (action === "option") {
+				if (typeof (param) == "string") {
+					switch (param) {
+						case "duration":
+							var p = controls.audio[0];
+							if (isNaN(p.duration)) return 0; // initially duration is NaN
+							if (p.duration == Infinity) { // while streaming CAN be infinity
+								if (p.seekable.length > 0) return p.seekable.end(0); // so we return partial (known) duration
+								else return 0; // I think it's impossible: a stream without nothing to stream
+							}
+						
+							// the actual duration in seconds as a float value if the duration is known and finite
+							return p.duration;
+						break;
+						case "position": // in seconds
+							var p = controls.audio[0];
+							return p.currentTime;
+						break;
+					}
+				}
 			}
 			
 			// propagate
@@ -607,10 +623,10 @@ $.fn.jap.defaults = {
 			<td class="volume-container" rowspan="3" ></td> \
 		</tr> \
 		<tr> \
-			<td class="display-container" colspan="7" ></td> \
+			<td class="display-container" colspan="8" ></td> \
 		</tr> \
 		<tr> \
-			<td class="seekbar-container" colspan="7" ></td> \
+			<td class="seekbar-container" colspan="8" ></td> \
 		</tr></table> \
 		<div class="queue-container"></div>')
 }
