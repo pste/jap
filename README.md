@@ -2,7 +2,7 @@
 ![](https://raw.github.com/pste/jap/master/jap.png)
 
 The "jap" is a jQueryUI styled HTML5 audio player. It supports streaming, local (uri) playing, positioning, volume and playlists.
-This is the 20140306 build.
+This is the 20140307 build.
 
 ### TODO
 - Playlist add button (browse local/prompt uri)
@@ -111,6 +111,8 @@ $("#jap").jap()
 
 - enqueue:
 ```
+$("#controls").jap("enqueue", "/home/my/music/is/here/track1.mp3");
+or (the better):
 $("#controls").jap("enqueue", { src: "/home/my/music/is/here/track1.mp3", metadata: {title: "The wonderful song", album: "A new Album"} });
 ```
     * src (required): the uri of the song.
