@@ -85,6 +85,17 @@ $("#jap").jap({
 });
 ```
 
+### OPTIONS
+These are pretty self explanatory.
+To get the duration in seconds (as a float, neither NaN nor Infinity):
+```
+$("#jap").jap("option","duration");
+```
+To get the position in seconds (as a float):
+```
+$("#jap").jap("option","position");
+```
+
 ### METHODS (API)
 Every method call will trigger ad event of the same name after being handled. It can be reused from the caller.
 Example:
